@@ -1,0 +1,13 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Secrets and local tool config
+.env
+.env.*
+.mcp.json
+
+# Working case folders: your own research never gets committed
+cases/*/
+!cases/.gitkeep

@@ -37,11 +37,14 @@ If `00-state.md` already exists, this is a resume. Read it and orient from where
 
 ## Tool routing
 
+`method/10-tools.md` has the setup, the parameters, and the traps. Read it before the first research stage. The rules below are the summary, not the file.
+
 - **Web research is Exa only.** `mcp__exa__web_search_exa` to find sources, `mcp__exa__web_fetch_exa` to read them. Do not fall back to a built-in web tool without saying so.
 - **Read load-bearing sources in full.** Search results give you highlights, usually an abstract and a conclusion. Never build an argument on those. Fetch the source with a high character limit and read the body.
 - **Flag paywalls before fetching.** If a source is likely behind one, stop and tell the user, who may have library access and can supply the PDF for direct reading. Never characterise a paywalled work from its abstract.
 - **Fan out with sub-agents.** In the research stage, spawn one agent per company slice, in parallel, in a single message.
 - **PDFs are read locally.** A long filing read from disk beats the same filing read through a fetch window.
+- **Never fetch without setting `maxCharacters`.** It defaults to 3,000, which is about an abstract, and it truncates with no error. This is the most damaging default in the toolchain.
 
 ## What never gets delegated
 

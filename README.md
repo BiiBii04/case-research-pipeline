@@ -5,7 +5,7 @@
 
 > A method for taking a company case study from a raw brief to a recommendation that holds up when a panel attacks it. Built for [Claude Code](https://claude.com/claude-code), using [Exa](https://exa.ai) for web research. The output is a company you actually understand, a diagnosis you can prove, one recommendation, and a written answer to every hard question you will be asked about it.
 
-**Status: in use.** This is a working method, not a finished product. It runs on real coursework and real case competitions, and it changes whenever a case finds a hole in it.
+**Status: testing.** The method is written and internally complete. This particular merge has not yet been run end to end on a live case, which is the next thing that happens to it. Expect rules to move once a real case finds the holes. The stage spine comes out of real coursework; the evidence rules layered on top of it are newer and less worn in.
 
 ---
 
@@ -169,11 +169,14 @@ The **people** slice has a hard boundary: public professional signal only. The p
 
 ## What is inside
 
-`SKILL.md` at the root is what Claude Code loads. The method is nine documents. The templates are the shapes it produces.
+The method is ten documents. The templates are the shapes it produces. Everything else is an entry point into one of those two.
 
 | Part | File | What it covers |
 |---|---|---|
+| Entry point | `AGENTS.md` | What this repo is, which file to read depending on why you are here, and the rules for editing it. `CLAUDE.md` imports it rather than keeping a second copy. |
 | Entry point | `SKILL.md` | What to read at each stage, tool routing, and which steps never get delegated. |
+| Entry point | `CONTRIBUTING.md` | The branch model, what a pull request has to explain, and how two people compare competing approaches. |
+| Command | `.claude/commands/case-research.md` | `/case-research <company>`, which checks the setup, resumes or starts a case, and walks the stages. |
 | Method | `method/01-spine.md` | The stages, the gates, the state file, and the official-file rule. |
 | Method | `method/02-evidence-rules.md` | The F/I/A tags, two-axis source grading, and the twelve honesty rules. |
 | Method | `method/03-company-map.md` | The eight slices, their ownership boundaries, and cross-slice routing. |
@@ -183,6 +186,7 @@ The **people** slice has a hard boundary: public professional signal only. The p
 | Method | `method/07-ideation.md` | The six archetypes, the relevance gate, the cliché gate. |
 | Method | `method/08-scoring.md` | The scoring rubric, tuned anchors, reading results as bands. |
 | Method | `method/09-defense.md` | Harvesting soft spots, hostile questions, what would change your mind. |
+| Method | `method/10-tools.md` | Connecting Exa, the parameter defaults that quietly ruin research, and cost. |
 | Template | `templates/state.md` | The state file: the spine a cold session reads first. |
 | Template | `templates/dossier.md` | A company slice, with its ownership header and tag legend. |
 | Template | `templates/gather-report.md` | What a research agent hands back. |
@@ -190,23 +194,58 @@ The **people** slice has a hard boundary: public professional signal only. The p
 
 ---
 
-## Quickstart
+## Setup
 
-Install it as a Claude Code skill:
+**Connect Exa first.** The research stage does not work without it, and the failure is not obvious: an agent with no search tool will still produce confident prose.
 
 ```bash
-git clone https://github.com/<your-account>/case-research-pipeline.git \
-  ~/.claude/skills/case-research-pipeline
-claude
+claude plugin install exa@claude-plugins-official
 ```
 
-Then, in Claude Code, hand over the brief:
+Or, for the MCP server alone:
+
+```bash
+claude mcp add --transport http exa https://mcp.exa.ai/mcp
+```
+
+Restart Claude Code, then check that `mcp__exa__web_search_exa` and `mcp__exa__web_fetch_exa` are available. The hosted server works anonymously with rate limits; a `429` means you need your own key. Setup detail, the parameter defaults that matter, and the cost levers are in `method/10-tools.md`.
+
+Read that file before your first research stage. One default in it, a 3,000 character cap on page fetches, will silently reduce a full annual report to its opening page and give you no indication it happened.
+
+## Quickstart
+
+There are two install modes, and picking the wrong one is the usual reason nothing works.
+
+**To use the method on cases in other projects**, clone into the Claude Code skills directory:
+
+```bash
+git clone https://github.com/BiiBii04/case-research-pipeline.git \
+  ~/.claude/skills/case-research-pipeline
+```
+
+The skill then loads on its own whenever a case-shaped request appears, in any project, so you never have to name it:
 
 ```
 I have a case study on Acme Corp, brief and rubric attached. Run the case pipeline.
 ```
 
-The skill loads on its own when a case-shaped request arrives, so you do not have to name it. It will set up a working folder, digest the brief and the rubric into one file, and start at Phase 0.
+**To work on the method itself**, clone anywhere and open Claude Code inside it:
+
+```bash
+git clone https://github.com/BiiBii04/case-research-pipeline.git
+cd case-research-pipeline
+claude
+```
+
+That mode gives you `AGENTS.md` and the `/case-research` command:
+
+```
+/case-research Acme Corp
+```
+
+The command checks that Exa is connected, resumes an existing case or sets up a new one, and walks the stages. Project commands only load from the directory Claude Code was opened in, which is why the command exists in this mode and not the other.
+
+Either way, expect one heavy stage per session. Work written at the tail end of a long session degrades in ways you can measure afterwards.
 
 Expect one stage per session for the heavy ones. A document written at the tail end of a long session degrades in ways you can measure: tags get sloppy, contradictions get resolved instead of surfaced, and the routing step gets skipped. If a session runs long, stop before the writing step and write fresh.
 
@@ -261,6 +300,26 @@ Limits worth knowing before you start:
 **Is the scoring an average I can just read off?** No, and treating it as one is a mistake the method warns about twice. Sort the options into strong, contested and weak, and use the number only to separate options inside the strong band. The written justification carries the decision. The arithmetic just organises it.
 
 **Can I swap Exa for something else?** The method transfers. The tool instructions do not, because they are written against one tool's verified behaviour. Swapping means rewriting that part against your own observations.
+
+---
+
+## Repository structure
+
+```
+.
+├── .claude/commands/    # /case-research, the executable entry point
+├── method/              # The method: ten documents
+├── templates/           # Output shapes: state, dossier, gather report, verification report
+├── cases/               # Your working folders land here, one per case (gitignored)
+├── AGENTS.md            # Agent entry point, the single source of agent instructions
+├── CLAUDE.md            # Imports AGENTS.md, not a second copy
+├── CONTRIBUTING.md      # Branch model, review, house style
+├── SKILL.md             # Claude Code skill definition and stage routing
+├── LICENSE              # MIT, plus the upstream notice for the adapted parts
+└── README.md            # This file
+```
+
+Nothing in `cases/` is ever committed. This repo holds the method, not the work done with it.
 
 ---
 
